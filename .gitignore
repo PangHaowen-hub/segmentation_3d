@@ -1,0 +1,13 @@
+*.png
+*.jpg
+*.xml
+*.pyc
+*.iml
+data/test/imgs/.keep
+data/train/imgs/.keep
+data/train/masks/.keep
+*.npz
+*.gz
+*.npy
+*.pth
+*.log
