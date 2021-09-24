@@ -18,7 +18,7 @@ logger = logging.getLogger()
 
 
 def setup_logger(logpth):
-    logfile = 'UNet_RLL-{}.log'.format(time.strftime('%Y-%m-%d-%H-%M-%S'))  # TODO:改log名
+    logfile = 'UNet_RML-{}.log'.format(time.strftime('%Y-%m-%d-%H-%M-%S'))  # TODO:改log名
     logfile = os.path.join(logpth, logfile)
     FORMAT = '%(levelname)s %(filename)s(%(lineno)d): %(message)s'
     log_level = logging.INFO
@@ -48,7 +48,7 @@ def train(model):
     batch_size = args.batch_size
     loss_fn = torch.nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=args.learning_rate)
-    train_dataset = MyDataset(rootpth="./data", mode='train/after/RLL')  # TODO：改数据地址
+    train_dataset = MyDataset(rootpth="./data", mode='train/after/RML')  # TODO：改数据地址
     train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=8)
     for epoch in range(args.num_epochs):
         logger.info('Epoch {}/{}'.format(epoch + 1, args.num_epochs))
@@ -68,7 +68,7 @@ def train(model):
             step += 1
             logger.info("%d/%d,train_loss:%0.5f" % (step, dataset_size // train_dataloader.batch_size, loss.item()))
         logger.info("epoch %d loss:%0.5f" % (epoch, epoch_loss))
-        torch.save(model.state_dict(), 'UNet_RLL%d.pth' % epoch)
+        torch.save(model.state_dict(), 'UNet_RML%d.pth' % epoch)  # TODO:改pth名
 
 
 if __name__ == '__main__':

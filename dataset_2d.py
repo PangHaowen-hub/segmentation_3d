@@ -21,7 +21,6 @@ def get_listdir(path):  # 获取目录下所有gz格式文件的地址，返回�
 class MyDataset(Dataset):
     def __init__(self, rootpth, mode='train', *args, **kwargs):
         super(MyDataset, self).__init__(*args, **kwargs)
-        assert mode in ('train', 'val', 'test')
         self.mode = mode
         with open('label_info.json', 'r') as fr:
             labels_info = json.load(fr)

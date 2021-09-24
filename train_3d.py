@@ -2,14 +2,13 @@ import torch
 import argparse
 from vnet3d import VNet
 from unet3d import UNet3D
-
 from torch import optim
 from dataset_3d import MyDataset
 from torch.utils.data import DataLoader
-from torch.cuda.amp import autocast as autocast
 import numpy as np
 import logging
 import time
+import os
 
 respth = './res'
 if not os.path.exists(respth):
@@ -65,50 +64,14 @@ def train(model):
         torch.save(model.state_dict(), 'VNet_%d.pth' % epoch)
 
 
-def test(model):
-    model.eval()
-    model.load_state_dict(torch.load(args.load, map_location='cuda'))
-    batch_size = args.batch_size
-    source_test_dir = r'./data_3d/img'
-    dataset = test_dataset(source_test_dir)
-    test_dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=False, num_workers=0)
-    znorm = ZNormalization()
-    patch_overlap = 32, 32, 32
-    patch_size = 128
-
-    for i, subj in enumerate(test_dataset.subjects):
-        subj = znorm(subj)
-        grid_sampler = torchio.inference.GridSampler(
-            subj,
-            patch_size,
-            patch_overlap,
-        )
-        patch_loader = torch.utils.data.DataLoader(grid_sampler, batch_size=2)
-        aggregator = torchio.inference.GridAggregator(grid_sampler)
-        with torch.no_grad():
-            for patches_batch in tqdm(patch_loader):
-                input_tensor = patches_batch['source'][torchio.DATA].to(device)
-                locations = patches_batch[torchio.LOCATION]
-                outputs = model(input_tensor)
-                aggregator.add_batch(outputs.argmax(dim=1), locations)
-        output_tensor = aggregator.get_output_tensor()
-        affine = subj['source']['affine']
-        output_image = torchio.ScalarImage(tensor=output_tensor.numpy(), affine=affine)
-        output_image.save('temp.nii.gz')
-
-
 if __name__ == '__main__':
     setup_logger(respth)
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model = VNet(elu=True, in_channels=1, classes=6).to(device)
     parser = argparse.ArgumentParser()
-    parser.add_argument('--type', dest='type', type=str, default='test', help='train or test')
     parser.add_argument('--batch_size', dest='batch_size', type=int, default=2, help='batch_size')
     parser.add_argument('--load', dest='load', type=str, default='VNet_3.pth', help='the path of the .pth file')
     parser.add_argument('--epoch', dest='num_epochs', type=int, default=100, help='num_epochs')
     parser.add_argument('--lr', dest='learning_rate', type=float, default=1e-3, help='learning_rate')
     args = parser.parse_args()
-    if args.type == 'train':
-        train(model)
-    else:
-        test(model)
+    train(model)
