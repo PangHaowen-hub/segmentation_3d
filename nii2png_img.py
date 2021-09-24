@@ -23,15 +23,17 @@ def nii2png(img, save_path):
     img_arr[img_arr < MIN_BOUND] = MIN_BOUND
     img_arr = (img_arr - MIN_BOUND) / (MAX_BOUND - MIN_BOUND) * 255
     _, fullflname = os.path.split(img)
+    path = os.path.join(save_path, 'images', 'test', 'after', 'RL', fullflname[:-7])  # -7是图像名，-12是mask图
+    os.mkdir(path)
     for i in trange(img_arr.shape[0]):
         temp = img_arr[i, :, :].astype(np.uint8)
         img_pil = Image.fromarray(temp)
-        img_pil.save(os.path.join(save_path, 'images', 'test', 'LL', fullflname + '_' + str(i) + '.png'))
+        img_pil.save(os.path.join(path, str(i).rjust(3, '0') + '.png'))
 
 
 if __name__ == '__main__':
-    img_path = r'F:\my_lobe_data\after\LL\imgs_rename'
-    save_path = r'D:\my_code\u_net_multiple_classification\data'
+    img_path = r'F:\my_lobe_data\after\RL\imgs_rename'
+    save_path = r'D:\my_code\segmentation_3d\data'
     img_list = get_listdir(img_path)
     img_list.sort()
     for i in trange(len(img_list)):

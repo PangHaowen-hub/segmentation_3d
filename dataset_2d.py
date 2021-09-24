@@ -72,13 +72,10 @@ class MyDataset(Dataset):
 
 
 class test_dataset(Dataset):
-    def __init__(self, rootpth, mode='test', *args, **kwargs):
-        super(test_dataset, self).__init__(*args, **kwargs)
-        assert mode in ('train', 'val', 'test')
-        self.mode = mode
+    def __init__(self, rootpth):
+        super(test_dataset, self).__init__()
         self.imgs = {}
-        impth = osp.join(rootpth, 'images', mode, 'LL')  # TODO：需要改此处
-        self.img_list = get_listdir(impth)
+        self.img_list = get_listdir(rootpth)
         self.len = len(self.img_list)
         self.to_tensor = transforms.ToTensor()
 

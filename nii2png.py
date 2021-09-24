@@ -30,7 +30,7 @@ def get_color_map_list(num_classes):
     return color_map
 
 
-def nii2png(img, mask, save_path):
+def nii2png(img, mask, save_path_img, save_path_mask):
     color_map = get_color_map_list(256)
     sitk_img = sitk.ReadImage(img)
     img_arr = sitk.GetArrayFromImage(sitk_img)
@@ -47,19 +47,21 @@ def nii2png(img, mask, save_path):
     for i in trange(img_arr.shape[0]):
         temp = img_arr[i, :, :].astype(np.uint8)
         img_pil = Image.fromarray(temp)
-        img_pil.save(os.path.join(save_path, 'images', 'train', fullflname + '_' + str(i) + '.png'))
+        img_pil.save(os.path.join(save_path_img, fullflname + '_' + str(i) + '.png'))
         mask_pil = Image.fromarray(mask_arr[i, :, :].astype(np.uint8), mode='P')
         mask_pil.putpalette(color_map)
-        mask_pil.save(os.path.join(save_path, 'masks', 'train', fullflname + '_' + str(i) + '.png'))
+        mask_pil.save(os.path.join(save_path_mask, fullflname + '_' + str(i) + '.png'))
 
 
 if __name__ == '__main__':
-    img_path = r'F:\my_lobe_data\after\LL\imgs'
-    mask_path = r'F:\my_lobe_data\before\all_lobe_512\masks_rename'
-    save_path = r'D:\my_code\u_net_multiple_classification\data'
+    img_path = r'F:\my_lobe_data\after\RM\imgs_rename'
+    mask_path = r'F:\my_lobe_data\after\RM\masks_rename'
+    save_path_img = r'D:\my_code\segmentation_3d\data\images\train\after\RML'
+    save_path_mask = r'D:\my_code\segmentation_3d\data\masks\train\after\RML'
+
     img_list = get_listdir(img_path)
     img_list.sort()
     mask_list = get_listdir(mask_path)
     mask_list.sort()
     for i in trange(len(img_list)):
-        nii2png(img_list[i], mask_list[i], save_path)
+        nii2png(img_list[i], mask_list[i], save_path_img, save_path_mask)
