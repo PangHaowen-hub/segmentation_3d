@@ -1,13 +1,8 @@
 import torch.utils.data as data
-from torchvision.transforms import transforms
-import numpy as np
-import logging
 import os
-import SimpleITK as sitk
-from torchio import ScalarImage, LabelMap, Subject, SubjectsDataset, Queue
 from torchio.data import UniformSampler
-from torchio.transforms import ZNormalization, CropOrPad, Compose
-import torchio as tio
+from torchio.transforms import ZNormalization, CropOrPad, Compose, Resample, Resize
+import torchio
 
 
 def get_listdir(path):
@@ -27,25 +22,28 @@ class MyDataset(data.Dataset):
         self.mask_list.sort()
         self.subjects = []
         for (image_path, label_path) in zip(self.img_list, self.mask_list):
-            subject = tio.Subject(
-                source=tio.ScalarImage(image_path),
-                label=tio.LabelMap(label_path),
+            subject = torchio.Subject(
+                source=torchio.ScalarImage(image_path),
+                label=torchio.LabelMap(label_path),
             )
             self.subjects.append(subject)
         self.transforms = self.transform()
-        self.training_set = tio.SubjectsDataset(self.subjects, transform=self.transforms)
+        self.training_set = torchio.SubjectsDataset(self.subjects, transform=self.transforms)
         queue_length = 5
         samples_per_volume = 5
         patch_size = 128
-        self.queue_dataset = Queue(self.training_set, queue_length, samples_per_volume, UniformSampler(patch_size))
+        self.queue_dataset = torchio.Queue(self.training_set, queue_length, samples_per_volume,
+                                           UniformSampler(patch_size))
 
     def transform(self):
-        crop_or_pad_size = (512, 512, 320)
+        # crop_or_pad_size = (512, 512, 320)
         training_transform = Compose([
-            CropOrPad(crop_or_pad_size, padding_mode='reflect'),
+            # CropOrPad(crop_or_pad_size, padding_mode='reflect'),
             ZNormalization(),
+            Resize((256, 256, 160))
         ])
         return training_transform
+
 
 class test_dataset(data.Dataset):
     def __init__(self, imgs_path):
@@ -53,11 +51,9 @@ class test_dataset(data.Dataset):
         self.img_list.sort()
         self.subjects = []
         for image_path in self.img_list:
-            subject = tio.Subject(
-                source=tio.ScalarImage(image_path)
+            subject = torchio.Subject(
+                source=torchio.ScalarImage(image_path)
             )
             self.subjects.append(subject)
 
-        self.training_set = tio.SubjectsDataset(self.subjects, transform=None)
-
-
+        self.training_set = torchio.SubjectsDataset(self.subjects, transform=None)

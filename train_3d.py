@@ -17,7 +17,7 @@ logger = logging.getLogger()
 
 
 def setup_logger(logpth):
-    logfile = 'VNet-{}.log'.format(time.strftime('%Y-%m-%d-%H-%M-%S'))
+    logfile = 'VNet-Pre-{}.log'.format(time.strftime('%Y-%m-%d-%H-%M-%S'))
     logfile = os.path.join(logpth, logfile)
     FORMAT = '%(levelname)s %(filename)s(%(lineno)d): %(message)s'
     log_level = logging.INFO
@@ -48,20 +48,20 @@ def train(model):
         for i, batch in enumerate(train_dataloader):
             x = batch['source']['data']
             y = batch['label']['data']
-            x = x.type(torch.FloatTensor).cuda()
-            y = np.squeeze(y, 1)
-            y = y.type(torch.FloatTensor).cuda()
+            x = x.cuda()
+            y = torch.squeeze(y, 1).long()
+            y = y.cuda()
 
             optimizer.zero_grad()
             output = model(x)
-            loss = loss_fn(output, y.long())
+            loss = loss_fn(output, y)
             loss.backward()
             optimizer.step()
             epoch_loss += loss.item()
             step += 1
             logger.info("%d/%d,train_loss:%0.5f" % (step, dataset_size // train_dataloader.batch_size, loss.item()))
         logger.info("epoch %d loss:%0.5f" % (epoch, epoch_loss))
-        torch.save(model.state_dict(), 'VNet_%d.pth' % epoch)
+        torch.save(model.state_dict(), './VNet_Pre/VNet_%d.pth' % epoch)
 
 
 if __name__ == '__main__':
@@ -70,8 +70,8 @@ if __name__ == '__main__':
     model = VNet(elu=True, in_channels=1, classes=6).to(device)
     parser = argparse.ArgumentParser()
     parser.add_argument('--batch_size', dest='batch_size', type=int, default=2, help='batch_size')
-    parser.add_argument('--load', dest='load', type=str, default='VNet_3.pth', help='the path of the .pth file')
+    parser.add_argument('--load', dest='load', type=str, help='the path of the .pth file')
     parser.add_argument('--epoch', dest='num_epochs', type=int, default=100, help='num_epochs')
-    parser.add_argument('--lr', dest='learning_rate', type=float, default=1e-3, help='learning_rate')
+    parser.add_argument('--lr', dest='learning_rate', type=float, default=0.0005, help='learning_rate')
     args = parser.parse_args()
     train(model)
