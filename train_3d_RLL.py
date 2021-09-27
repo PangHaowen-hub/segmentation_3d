@@ -17,7 +17,7 @@ logger = logging.getLogger()
 
 
 def setup_logger(logpth):
-    logfile = 'VNet-Pre-{}.log'.format(time.strftime('%Y-%m-%d-%H-%M-%S'))
+    logfile = 'VNet-RLL-{}.log'.format(time.strftime('%Y-%m-%d-%H-%M-%S'))
     logfile = os.path.join(logpth, logfile)
     FORMAT = '%(levelname)s %(filename)s(%(lineno)d): %(message)s'
     log_level = logging.INFO
@@ -31,8 +31,8 @@ def train(model):
         model.load_state_dict(torch.load(args.load, map_location='cuda'))
     loss_fn = torch.nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=args.learning_rate)
-    source_train_dir = r'./data_3d/img'
-    label_train_dir = r'./data_3d/mask'
+    source_train_dir = r'./data_3d/model_RLL/img'
+    label_train_dir = r'./data_3d/model_RLL/mask'
     train_dataset = MyDataset(source_train_dir, label_train_dir)
     train_dataloader = DataLoader(train_dataset.queue_dataset,
                                   batch_size=args.batch_size,
@@ -62,13 +62,13 @@ def train(model):
             step += 1
             logger.info("%d/%d,train_loss:%0.5f" % (step, dataset_size // train_dataloader.batch_size, loss.item()))
         logger.info("epoch %d loss:%0.5f" % (epoch, epoch_loss))
-        torch.save(model.state_dict(), './VNet_Pre/VNet_%d.pth' % epoch)
+        torch.save(model.state_dict(), './VNet_RLL/VNet_RLL_%d.pth' % epoch)
 
 
 if __name__ == '__main__':
     setup_logger(respth)
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    model = VNet(elu=True, in_channels=1, classes=6).to(device)
+    model = VNet(elu=True, in_channels=1, classes=3).to(device)
     parser = argparse.ArgumentParser()
     parser.add_argument('--batch_size', dest='batch_size', type=int, default=2, help='batch_size')
     parser.add_argument('--load', dest='load', type=str, help='the path of the .pth file')

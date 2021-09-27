@@ -55,5 +55,16 @@ class test_dataset(data.Dataset):
                 source=torchio.ScalarImage(image_path)
             )
             self.subjects.append(subject)
+        self.transforms = self.transform()
 
-        self.training_set = torchio.SubjectsDataset(self.subjects, transform=None)
+        self.test_set = torchio.SubjectsDataset(self.subjects, transform=self.transforms)
+
+    def transform(self):
+        test_transform = Compose([
+            ZNormalization(),
+            Resize((256, 256, 160))
+        ])
+        return test_transform
+
+    def get_shape(self, i):
+        return self.subjects[i].shape
