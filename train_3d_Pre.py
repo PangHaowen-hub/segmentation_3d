@@ -9,6 +9,7 @@ import numpy as np
 import logging
 import time
 import os
+from dice_3d import dice_3d, get_listdir
 
 respth = './res'
 if not os.path.exists(respth):

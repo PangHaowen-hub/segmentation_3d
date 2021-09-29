@@ -11,12 +11,13 @@ import torchio
 from torchio.transforms import ZNormalization, CropOrPad, Compose, Resample, Resize
 import SimpleITK as sitk
 
+
 def test(model):
     model.eval()
     model.load_state_dict(torch.load(args.load, map_location='cuda'))
     batch_size = args.batch_size
-    source_test_dir = r'./data_3d/LU/img'
-    save_path = r'./data_3d/LU/pred'
+    source_test_dir = r'./data_3d/test/RL/img'
+    save_path = r'./data_3d/test/RL/pred_right'
     dataset = test_dataset(source_test_dir)
     patch_overlap = 64, 64, 64
     patch_size = 128
@@ -50,10 +51,10 @@ def test(model):
 
 if __name__ == '__main__':
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    model = VNet(elu=True, in_channels=1, classes=6).to(device)
+    model = VNet(elu=True, in_channels=1, classes=3).to(device)
     parser = argparse.ArgumentParser()
     parser.add_argument('--batch_size', dest='batch_size', type=int, default=1, help='batch_size')
-    parser.add_argument('--load', dest='load', type=str, default='./VNet_Pre/VNet_25.pth',
+    parser.add_argument('--load', dest='load', type=str, default='./VNet_RLL/VNet_RLL_30.pth',
                         help='the path of the .pth file')
     args = parser.parse_args()
     test(model)

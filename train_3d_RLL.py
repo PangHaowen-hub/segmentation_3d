@@ -3,12 +3,17 @@ import argparse
 from vnet3d import VNet
 from unet3d import UNet3D
 from torch import optim
-from dataset_3d import MyDataset
+from dataset_3d import MyDataset, test_dataset
 from torch.utils.data import DataLoader
 import numpy as np
 import logging
 import time
 import os
+import torchio
+from torchio.transforms import ZNormalization, CropOrPad, Compose, Resample, Resize
+import tqdm
+import SimpleITK as sitk
+from dice_3d import dice_3d, get_listdir
 
 respth = './res'
 if not os.path.exists(respth):
@@ -41,7 +46,7 @@ def train(model):
                                   drop_last=True)
 
     for epoch in range(args.num_epochs):
-        logger.info('Epoch {}/{}'.format(epoch + 1, args.num_epochs))
+        logger.info('Epoch {}/{}'.format(epoch, args.num_epochs))
         logger.info('-' * 10)
         dataset_size = len(train_dataloader.dataset)
         epoch_loss = 0
@@ -63,6 +68,50 @@ def train(model):
             logger.info("%d/%d,train_loss:%0.5f" % (step, dataset_size // train_dataloader.batch_size, loss.item()))
         logger.info("epoch %d loss:%0.5f" % (epoch, epoch_loss))
         torch.save(model.state_dict(), './VNet_RLL/VNet_RLL_%d.pth' % epoch)
+        if epoch % 10 == 0:
+            source_test_dir = r'./data_3d/test/RL/img'
+            save_path = r'./data_3d/test/RL/pred_right'
+            dataset = test_dataset(source_test_dir)
+            patch_overlap = 64, 64, 64
+            patch_size = 128
+            for i, subj in enumerate(dataset.test_set):
+                grid_sampler = torchio.inference.GridSampler(subj, patch_size, patch_overlap)  # 从图像中提取patch
+                patch_loader = torch.utils.data.DataLoader(grid_sampler, 1)
+                aggregator = torchio.inference.GridAggregator(grid_sampler, 'average')  # 用于聚合patch推理结果
+                with torch.no_grad():
+                    for patches_batch in tqdm.tqdm(patch_loader):
+                        input_tensor = patches_batch['source'][torchio.DATA].to(device).float()
+                        outputs = model(input_tensor)  # outputs torch.Size([1, 6, 128, 128, 128])
+                        locations = patches_batch[torchio.LOCATION]  # patch的位置信息
+                        aggregator.add_batch(outputs, locations)
+                output_tensor = aggregator.get_output_tensor()  # 获取聚合后volume
+                affine = subj['source']['affine']
+                output_image = torchio.ScalarImage(tensor=output_tensor.numpy(), affine=affine)
+                out_transform = Resize(dataset.get_shape(i)[1:])
+                output_image = out_transform(output_image)
+
+                name = subj['source']['path']
+                _, fullflname = os.path.split(name)
+                new_mask = sitk.GetImageFromArray(output_image.data.argmax(dim=0).int().permute(2, 1, 0))
+                new_mask.SetSpacing(output_image.spacing)
+                new_mask.SetDirection(output_image.direction)
+                new_mask.SetOrigin(output_image.origin)
+                sitk.WriteImage(new_mask, os.path.join(save_path, fullflname))
+
+            mask_path = r'G:\my_lobe_data\after\RL\test_mask'
+            pred_path = r'./data_3d/test/RL/pred_right'
+            mask = get_listdir(mask_path)
+            mask.sort()
+            pred = get_listdir(pred_path)
+            pred.sort()
+            dice = 0
+            for i in range(len(mask)):
+                dice += dice_3d(mask[i], pred[i], 1)
+            logger.info(dice / len(mask))
+            dice = 0
+            for i in range(len(mask)):
+                dice += dice_3d(mask[i], pred[i], 2)
+            logger.info(dice / len(mask))
 
 
 if __name__ == '__main__':
