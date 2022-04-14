@@ -22,7 +22,7 @@ logger = logging.getLogger()
 
 
 def setup_logger(logpth):
-    logfile = 'VNet-RUL-{}.log'.format(time.strftime('%Y-%m-%d-%H-%M-%S'))
+    logfile = 'UNet3d-RUL-{}.log'.format(time.strftime('%Y-%m-%d-%H-%M-%S'))
     logfile = os.path.join(logpth, logfile)
     FORMAT = '%(levelname)s %(filename)s(%(lineno)d): %(message)s'
     log_level = logging.INFO
@@ -67,10 +67,10 @@ def train(model):
             step += 1
             logger.info("%d/%d,train_loss:%0.5f" % (step, dataset_size // train_dataloader.batch_size, loss.item()))
         logger.info("epoch %d loss:%0.5f" % (epoch, epoch_loss))
-        torch.save(model.state_dict(), './VNet_RUL/VNet_RUL_%d.pth' % epoch)
+        torch.save(model.state_dict(), './UNet3d_RUL/UNet3d_RUL_%d.pth' % epoch)
         if epoch % 10 == 0:
             source_test_dir = r'./data_3d/test/RU/img'
-            save_path = r'./data_3d/test/RU/pred_right'
+            save_path = r'./data_3d/test/RU/pred_right_unet3d'
             dataset = test_dataset(source_test_dir)
             patch_overlap = 64, 64, 64
             patch_size = 128
@@ -98,8 +98,8 @@ def train(model):
                 new_mask.SetOrigin(output_image.origin)
                 sitk.WriteImage(new_mask, os.path.join(save_path, fullflname))
 
-            mask_path = r'./data_3d/mask/RU'
-            pred_path = r'./data_3d/test/RU/pred_right'
+            mask_path = r'./data_3d/test/RU/mask'
+            pred_path = r'./data_3d/test/RU/pred_right_unet3d'
             mask = get_listdir(mask_path)
             mask.sort()
             pred = get_listdir(pred_path)
@@ -117,9 +117,10 @@ def train(model):
 if __name__ == '__main__':
     setup_logger(respth)
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    model = VNet(elu=True, in_channels=1, classes=3).to(device)
+    # model = VNet(elu=True, in_channels=1, classes=3).to(device)
+    model = UNet3D(in_channels=1, out_channels=3).to(device)
     parser = argparse.ArgumentParser()
-    parser.add_argument('--batch_size', dest='batch_size', type=int, default=2, help='batch_size')
+    parser.add_argument('--batch_size', dest='batch_size', type=int, default=1, help='batch_size')
     parser.add_argument('--load', dest='load', type=str, help='the path of the .pth file')
     parser.add_argument('--epoch', dest='num_epochs', type=int, default=100, help='num_epochs')
     parser.add_argument('--lr', dest='learning_rate', type=float, default=0.0005, help='learning_rate')

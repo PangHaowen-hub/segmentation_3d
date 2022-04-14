@@ -15,9 +15,9 @@ def get_listdir(path):  # 获取目录下所有gz格式文件的地址，返回�
 
 
 if __name__ == '__main__':
-    nii_path = r'F:\my_lobe_data\after\RU\masks_rename\RU_016.nii.gz'
-    mask_path = r'D:\my_code\segmentation_3d\data\images\test\after\RU\RU_016_right'
-    save_path = r'D:\my_code\segmentation_3d\data\images\test\after\RU'
+    nii_path = r'G:\my_lobe_data\after\_SJ_test\RU\mask\zhangqinghua_mask.nii.gz'
+    mask_path = r'F:\my_code\segmentation_3d\data\images\test\SJ\after\png\RU\RU_003_RU'
+    save_path = r'F:\my_code\segmentation_3d\data\images\test\SJ\after\png\RU'
     sitk_img = sitk.ReadImage(nii_path)
     img_arr = sitk.GetArrayFromImage(sitk_img)
 

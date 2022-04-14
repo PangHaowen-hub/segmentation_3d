@@ -40,14 +40,14 @@ if __name__ == '__main__':
     model = UNet(n_channels=1, n_classes=3).to(device)  # TODO:改类别数
     color_map = get_color_map_list(256)
     model.eval()
-    model.load_state_dict(torch.load('./UNet_RUL20.pth', map_location='cuda'))
+    model.load_state_dict(torch.load('./UNet_RML20.pth', map_location='cuda'))
 
-    dir = "./data/images/test/after/RU"
+    dir = r"F:\my_code\segmentation_3d\data\images\test\SJ\after\png\RM"
     files_path = get_listdir(dir)
-    for files in trange(14, len(files_path)):
+    for files in trange(len(files_path)):
         dataset = test_dataset(rootpth=files_path[files])
         test_dataloader = DataLoader(dataset, batch_size=1, shuffle=False, num_workers=0)
-        save_path = files_path[files][:-5] + '_right'
+        save_path = files_path[files][:-5] + '_RM'
         os.mkdir(save_path)
         for x, name in test_dataloader:
             inputs = x.to(device)

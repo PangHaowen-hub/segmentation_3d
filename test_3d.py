@@ -16,8 +16,8 @@ def test(model):
     model.eval()
     model.load_state_dict(torch.load(args.load, map_location='cuda'))
     batch_size = args.batch_size
-    source_test_dir = r'./data_3d/test/RL/img'
-    save_path = r'./data_3d/test/RL/pred_right'
+    source_test_dir = r'F:\my_code\segmentation_3d\data_SJ\after\img\RL'
+    save_path = r'F:\my_code\segmentation_3d\data_SJ\after\pred_3d\RL\3dUNet\right'
     dataset = test_dataset(source_test_dir)
     patch_overlap = 64, 64, 64
     patch_size = 128
@@ -35,7 +35,7 @@ def test(model):
         output_tensor = aggregator.get_output_tensor()  # 获取聚合后volume
         affine = subj['source']['affine']
         output_image = torchio.ScalarImage(tensor=output_tensor.numpy(), affine=affine)
-        out_transform = Resize(dataset.get_shape(i)[1:])
+        out_transform = Resize(dataset.get_shape(i)[1:])  # 恢复原始大小
         output_image = out_transform(output_image)
 
         name = subj['source']['path']
@@ -51,10 +51,11 @@ def test(model):
 
 if __name__ == '__main__':
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    model = VNet(elu=True, in_channels=1, classes=3).to(device)
+    # model = VNet(elu=True, in_channels=1, classes=3).to(device)
+    model = UNet3D(in_channels=1, out_channels=3).to(device)
     parser = argparse.ArgumentParser()
     parser.add_argument('--batch_size', dest='batch_size', type=int, default=1, help='batch_size')
-    parser.add_argument('--load', dest='load', type=str, default='./VNet_RLL/VNet_RLL_30.pth',
+    parser.add_argument('--load', dest='load', type=str, default='./UNet3d_RLL/UNet3d_RLL_99.pth',
                         help='the path of the .pth file')
     args = parser.parse_args()
     test(model)
