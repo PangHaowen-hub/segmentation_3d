@@ -5,8 +5,7 @@ from torch import optim
 from dataset_2d import MyDataset
 from dataset_2d import test_dataset
 from torch.utils.data import DataLoader
-import numpy as np
-from PIL import Image
+
 import os
 import logging
 import time
